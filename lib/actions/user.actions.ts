@@ -2,9 +2,7 @@
 
 import { FilterQuery, SortOrder } from "mongoose";
 import { revalidatePath } from "next/cache";
-
-import Community from "../models/community.model";
-import Thread from "../models/thread.model";
+import Thread from "../models/threads.model";
 import User from "../models/user.model";
 
 import { connectToDB } from "../mongoose";
@@ -13,10 +11,7 @@ export async function fetchUser(userId: string) {
   try {
     connectToDB();
 
-    return await User.findOne({ id: userId }).populate({
-      path: "communities",
-      model: Community,
-    });
+    return await User.findOne({ id: userId });
   } catch (error: any) {
     throw new Error(`Failed to fetch user: ${error.message}`);
   }
@@ -72,11 +67,6 @@ export async function fetchUserPosts(userId: string) {
       model: Thread,
       populate: [
         {
-          path: "community",
-          model: Community,
-          select: "name id image _id", // Select the "name" and "_id" fields from the "Community" model
-        },
-        {
           path: "children",
           model: Thread,
           populate: {
@@ -94,7 +84,7 @@ export async function fetchUserPosts(userId: string) {
   }
 }
 
-// Almost similar to Thead (search + pagination) and Community (search + pagination)
+// Almost similar to Thread
 export async function fetchUsers({
   userId,
   searchString = "",
@@ -161,8 +151,8 @@ export async function getActivity(userId: string) {
     const userThreads = await Thread.find({ author: userId });
 
     // Collect all the child thread ids (replies) from the 'children' field of each user thread
-    const childThreadIds = userThreads.reduce((acc, userThread) => {
-      return acc.concat(userThread.children);
+    const childThreadIds = userThreads.reduce((acc, userThreads) => {
+      return acc.concat(userThreads.children);
     }, []);
 
     // Find and return the child threads (replies) excluding the ones created by the same user

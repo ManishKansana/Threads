@@ -1,11 +1,11 @@
-import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs";
 
-import Comment from "@/components/forms/Comment";
+import Comment from "@/components/forms/Comments";
 import ThreadCard from "@/components/cards/ThreadCard";
 
 import { fetchUser } from "@/lib/actions/user.actions";
 import { fetchThreadById } from "@/lib/actions/thread.actions";
+import { redirect } from "next/navigation";
 
 export const revalidate = 0;
 
@@ -29,7 +29,6 @@ async function page({ params }: { params: { id: string } }) {
           parentId={thread.parentId}
           content={thread.text}
           author={thread.author}
-          community={thread.community}
           createdAt={thread.createdAt}
           comments={thread.children}
         />
@@ -52,7 +51,6 @@ async function page({ params }: { params: { id: string } }) {
             parentId={childItem.parentId}
             content={childItem.text}
             author={childItem.author}
-            community={childItem.community}
             createdAt={childItem.createdAt}
             comments={childItem.children}
             isComment
