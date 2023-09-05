@@ -34,7 +34,6 @@ async function Page({
       </div>
 
       <section className='mt-9 flex flex-wrap gap-4'>
-        {console.log(result)}
         {result.communities.length === 0 ? (
           <p className='no-result'>No Result</p>
         ) : (
