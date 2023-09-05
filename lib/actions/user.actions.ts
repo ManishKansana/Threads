@@ -3,8 +3,8 @@
 import { FilterQuery, SortOrder } from "mongoose";
 import { revalidatePath } from "next/cache";
 
-import Community from "../models/community.models";
-import Thread from "../models/threads.model";
+import Community from "../models/community.model";
+import Thread from "../models/thread.model";
 import User from "../models/user.model";
 
 import { connectToDB } from "../mongoose";
@@ -161,8 +161,8 @@ export async function getActivity(userId: string) {
     const userThreads = await Thread.find({ author: userId });
 
     // Collect all the child thread ids (replies) from the 'children' field of each user thread
-    const childThreadIds = userThreads.reduce((acc, userThreads) => {
-      return acc.concat(userThreads.children);
+    const childThreadIds = userThreads.reduce((acc, userThread) => {
+      return acc.concat(userThread.children);
     }, []);
 
     // Find and return the child threads (replies) excluding the ones created by the same user
