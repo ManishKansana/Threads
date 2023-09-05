@@ -1,53 +1,13 @@
 "use server";
 
-import { connectToDB } from "../mongoose";
-import User from "../models/user.model";
-import { revalidatePath } from "next/cache";
-import Thread from "../models/threads.model";
-import Community from "../models/community.models";
 import { FilterQuery, SortOrder } from "mongoose";
+import { revalidatePath } from "next/cache";
 
-interface Params {
-  userId: string;
-  username: string;
-  name: string;
-  bio: string;
-  image: string;
-  path: string;
-  onboarded: boolean;
-}
+import Community from "../models/community.models";
+import Thread from "../models/threads.model";
+import User from "../models/user.model";
 
-export async function updateUser({
-  userId,
-  bio,
-  name,
-  path,
-  username,
-  image,
-  onboarded,
-}: Params): Promise<void> {
-  try {
-    connectToDB();
-
-    await User.findOneAndUpdate(
-      { id: userId },
-      {
-        username: username.toLowerCase(),
-        name,
-        bio,
-        image,
-        onboarded,
-      },
-      { upsert: true }
-    );
-
-    if (path === "/profile/edit") {
-      revalidatePath(path);
-    }
-  } catch (error: any) {
-    throw new Error(`Failed to create/update user: ${error.message}`);
-  }
-}
+import { connectToDB } from "../mongoose";
 
 export async function fetchUser(userId: string) {
   try {
@@ -59,6 +19,46 @@ export async function fetchUser(userId: string) {
     });
   } catch (error: any) {
     throw new Error(`Failed to fetch user: ${error.message}`);
+  }
+}
+
+interface Params {
+  userId: string;
+  username: string;
+  name: string;
+  bio: string;
+  image: string;
+  path: string;
+}
+
+export async function updateUser({
+  userId,
+  bio,
+  name,
+  path,
+  username,
+  image,
+}: Params): Promise<void> {
+  try {
+    connectToDB();
+
+    await User.findOneAndUpdate(
+      { id: userId },
+      {
+        username: username.toLowerCase(),
+        name,
+        bio,
+        image,
+        onboarded: true,
+      },
+      { upsert: true }
+    );
+
+    if (path === "/profile/edit") {
+      revalidatePath(path);
+    }
+  } catch (error: any) {
+    throw new Error(`Failed to create/update user: ${error.message}`);
   }
 }
 
@@ -94,6 +94,7 @@ export async function fetchUserPosts(userId: string) {
   }
 }
 
+// Almost similar to Thead (search + pagination) and Community (search + pagination)
 export async function fetchUsers({
   userId,
   searchString = "",
@@ -160,8 +161,8 @@ export async function getActivity(userId: string) {
     const userThreads = await Thread.find({ author: userId });
 
     // Collect all the child thread ids (replies) from the 'children' field of each user thread
-    const childThreadIds = userThreads.reduce((acc, userThread) => {
-      return acc.concat(userThread.children);
+    const childThreadIds = userThreads.reduce((acc, userThreads) => {
+      return acc.concat(userThreads.children);
     }, []);
 
     // Find and return the child threads (replies) excluding the ones created by the same user
